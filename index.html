@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Seguimiento de entrenamientos en multipresa">
+    <meta name="theme-color" content="#1e3a8a">
+    <title>💪 HangTracker</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a8a;
+            --primary-dark: #1e40af;
+            --secondary: #3b82f6;
+            --accent: #60a5fa;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .type-btn {
+            padding: 3rem 2rem;
+            border: 3px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text);
+        }
+
+        .type-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .type-btn.fmax {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #f59e0b;
+        }
+
+        .type-btn.resistance {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-color: #3b82f6;
+        }
+
+        .subtype-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .subtype-btn {
+            padding: 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .subtype-btn:hover,
+        .subtype-btn.active {
+            border-color: var(--primary);
+            background: var(--accent);
+            color: white;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group small {
+            color: var(--text-light);
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #15803d;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-back {
+            background: var(--text-light);
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: var(--text);
+        }
+
+        .set-block {
+            background: var(--bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 2px solid var(--border);
+        }
+
+        .set-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .set-block-header h3 {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .btn-remove-set {
+            background: var(--danger);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-item {
+            background: var(--bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .history-item.fmax {
+            border-left-color: #f59e0b;
+        }
+
+        .history-item.resistance {
+            border-left-color: #3b82f6;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .history-type {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .history-date {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .history-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .history-detail {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .history-detail strong {
+            color: var(--text);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .badge.claudication {
+            background: var(--danger);
+            color: white;
+        }
+
+        .badge.pullups {
+            background: #10b981;
+            color: white;
+        }
+
+        .badge.hangs {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .type-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .subtype-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>💪 HangTracker</h1>
+        <p>Seguimiento de entrenamientos en multipresa</p>
+    </header>
+
+    <div class="container">
+        <!-- Vista: Selección de tipo -->
+        <div id="viewTypeSelector" class="view active">
+            <div class="card">
+                <h2>Selecciona el tipo de entrenamiento</h2>
+                <div class="type-selector">
+                    <button class="type-btn fmax" onclick="selectType('fmax')">
+                        🏋️ FMax<br>
+                        <small style="font-size: 0.9rem; font-weight: normal;">Fuerza Máxima</small>
+                    </button>
+                    <button class="type-btn resistance" onclick="selectType('resistance')">
+                        ⏱️ Resistencia<br>
+                        <small style="font-size: 0.9rem; font-weight: normal;">Entrenamiento continuo</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista: Selección de subtipo FMax -->
+        <div id="viewFmaxSubtype" class="view">
+            <div class="card">
+                <h2>🏋️ Tipo de entrenamiento FMax</h2>
+                <div class="subtype-selector">
+                    <button class="subtype-btn" onclick="selectFmaxType('pullups')">
+                        💪 Dominadas
+                    </button>
+                    <button class="subtype-btn" onclick="selectFmaxType('hangs')">
+                        🤲 Suspensiones
+                    </button>
+                </div>
+                <button class="btn-back" onclick="goBack('viewTypeSelector')" style="width: 100%;">
+                    ← Volver
+                </button>
+            </div>
+        </div>
+
+        <!-- Vista: Formulario Resistencia -->
+        <div id="viewResistance" class="view">
+            <div class="card">
+                <h2>⏱️ Entrenamiento de Resistencia</h2>
+                <form id="formResistance">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="res_edge">Canto</label>
+                            <select id="res_edge" name="edge" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="Cazo">Cazo</option>
+                                <option value="40mm">40 mm</option>
+                                <option value="30mm">30 mm</option>
+                                <option value="22mm">22 mm</option>
+                                <option value="15mm">15 mm</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="res_hang_time">Colgado (segundos)</label>
+                            <input type="number" id="res_hang_time" name="hang_time" step="1" required placeholder="7">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="res_rest_time">Descanso (segundos)</label>
+                            <input type="number" id="res_rest_time" name="rest_time" step="1" required placeholder="3">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Repeticiones</label>
+                            <input type="number" value="30" readonly style="background: var(--bg);">
+                            <small>Fijo: 30 repeticiones</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="res_rest_between">Descanso entre series</label>
+                            <input type="text" id="res_rest_between" name="rest_between" placeholder="3:00" pattern="[0-9]{1,2}:[0-9]{2}" required>
+                            <small>Formato: minutos:segundos (ej: 3:00)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="res_sets">Número de sets</label>
+                            <input type="number" id="res_sets" name="sets" min="1" required placeholder="5">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="res_claudication" name="claudication">
+                                <label for="res_claudication">¿Claudicación antes de completar?</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="res_claudication_set_group" style="display: none;">
+                            <label for="res_claudication_set">¿En qué set?</label>
+                            <input type="number" id="res_claudication_set" name="claudication_set" min="1" placeholder="3">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="res_notes">Notas</label>
+                            <input type="text" id="res_notes" name="notes" placeholder="Observaciones del entrenamiento...">
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn-back" onclick="goBack('viewTypeSelector')">← Volver</button>
+                        <button type="submit" class="btn-primary">💾 Guardar Entrenamiento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Vista: Formulario FMax Dominadas -->
+        <div id="viewFmaxPullups" class="view">
+            <div class="card">
+                <h2>💪 Entrenamiento FMax - Dominadas</h2>
+                <form id="formFmaxPullups">
+                    <div id="pullups_sets_container">
+                        <!-- Los bloques de sets se añadirán dinámicamente -->
+                    </div>
+
+                    <button type="button" class="btn-success" onclick="addPullupsSet()" style="width: 100%; margin-bottom: 1rem;">
+                        ➕ Añadir bloque de sets con diferente canto/lastre
+                    </button>
+
+                    <div class="form-group full-width">
+                        <label for="pullups_notes">Notas</label>
+                        <input type="text" id="pullups_notes" name="notes" placeholder="Observaciones del entrenamiento...">
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn-back" onclick="goBack('viewFmaxSubtype')">← Volver</button>
+                        <button type="submit" class="btn-primary">💾 Guardar Entrenamiento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Vista: Formulario FMax Suspensiones -->
+        <div id="viewFmaxHangs" class="view">
+            <div class="card">
+                <h2>🤲 Entrenamiento FMax - Suspensiones</h2>
+                <form id="formFmaxHangs">
+                    <div id="hangs_sets_container">
+                        <!-- Los bloques de sets se añadirán dinámicamente -->
+                    </div>
+
+                    <button type="button" class="btn-success" onclick="addHangsSet()" style="width: 100%; margin-bottom: 1rem;">
+                        ➕ Añadir bloque de sets con diferente canto/lastre
+                    </button>
+
+                    <div class="form-group full-width">
+                        <label for="hangs_notes">Notas</label>
+                        <input type="text" id="hangs_notes" name="notes" placeholder="Observaciones del entrenamiento...">
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn-back" onclick="goBack('viewFmaxSubtype')">← Volver</button>
+                        <button type="submit" class="btn-primary">💾 Guardar Entrenamiento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Vista: Histórico -->
+        <div id="viewHistory" class="view">
+            <div class="card">
+                <h2>📊 Histórico de Entrenamientos</h2>
+                <div class="btn-group">
+                    <button class="btn-secondary" onclick="exportData()">📥 Exportar CSV</button>
+                    <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 Importar CSV</button>
+                    <button class="btn-danger" onclick="clearAllData()">🗑️ Borrar Todo</button>
+                </div>
+                <input type="file" id="importFile" accept=".csv" style="display: none;">
+                
+                <div id="historyList" class="history-list">
+                    <div class="empty-state">No hay entrenamientos registrados</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón flotante para ir al histórico -->
+    <button id="historyBtn" onclick="showHistory()" style="
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        border: none;
+        cursor: pointer;
+        z-index: 1000;
+    ">📊</button>
+
+    <script src="app.js"></script>
+    <script>
+        // Service Worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registrado'))
+                    .catch(err => console.log('Error al registrar SW:', err));
+            });
+        }
+    </script>
+</body>
+</html>
