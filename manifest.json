@@ -2,22 +2,22 @@
   "name": "HangTracker - Entrenamiento Multipresa",
   "short_name": "HangTracker",
   "description": "Seguimiento de entrenamientos en multipresa - Resistencia y Fuerza Máxima",
-  "start_url": "/hangtracker/",
-  "scope": "/hangtracker/",
-  "id": "/hangtracker/",
+  "start_url": "/",
+  "scope": "/",
+  "id": "hangtracker-app",
   "display": "standalone",
   "background_color": "#f1f5f9",
   "theme_color": "#1e3a8a",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/hangtracker/icon-192.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/hangtracker/icon-512.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -27,3 +27,4 @@
   "lang": "es",
   "dir": "ltr"
 }
+
